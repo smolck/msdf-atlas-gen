@@ -77,12 +77,6 @@ OUTPUT SPECIFICATION - one or more can be specified
       Saves the atlas as an image file with the specified format. Layout data must be stored separately.
   -json <filename.json>
       Writes the atlas's layout data, as well as other metrics into a structured JSON file.
-  -csv <filename.csv>
-      Writes the layout data of the glyphs into a simple CSV file.
-  -arfont <filename.arfont>
-      Stores the atlas and its layout data as an Artery Font file. Supported formats: png, bin, binfloat.
-  -shadronpreview <filename.shadron> <sample text>
-      Generates a Shadron script that uses the generated atlas to draw a sample text as a preview.
 
 GLYPH CONFIGURATION
   -size <EM size>
@@ -231,12 +225,8 @@ struct Configuration {
   bool preprocessGeometry;
   bool kerning;
   int threadCount;
-  const char *arteryFontFilename;
   const char *imageFilename;
   const char *jsonFilename;
-  const char *csvFilename;
-  const char *shadronPreviewFilename;
-  const char *shadronPreviewText;
 };
 
 template <typename T, typename S, int N, GeneratorFunction<S, N> GEN_FN>
@@ -260,22 +250,6 @@ static bool makeAtlas(const std::vector<GlyphGeometry> &glyphs,
     else {
       success = false;
       puts("Failed to save the atlas as an image file.");
-    }
-  }
-
-  if (config.arteryFontFilename) {
-    ArteryFontExportProperties arfontProps;
-    arfontProps.fontSize = config.emSize;
-    arfontProps.pxRange = config.pxRange;
-    arfontProps.imageType = config.imageType;
-    arfontProps.imageFormat = config.imageFormat;
-    arfontProps.yDirection = config.yDirection;
-    if (exportArteryFont<float>(fonts.data(), fonts.size(), bitmap,
-                                config.arteryFontFilename, arfontProps))
-      puts("Artery Font file generated.");
-    else {
-      success = false;
-      puts("Failed to generate Artery Font file.");
     }
   }
 
@@ -424,11 +398,6 @@ int main(int argc, const char *const *argv) {
       ++argPos;
       continue;
     }
-    ARG_CASE("-arfont", 1) {
-      config.arteryFontFilename = argv[++argPos];
-      ++argPos;
-      continue;
-    }
     ARG_CASE("-imageout", 1) {
       config.imageFilename = argv[++argPos];
       ++argPos;
@@ -436,17 +405,6 @@ int main(int argc, const char *const *argv) {
     }
     ARG_CASE("-json", 1) {
       config.jsonFilename = argv[++argPos];
-      ++argPos;
-      continue;
-    }
-    ARG_CASE("-csv", 1) {
-      config.csvFilename = argv[++argPos];
-      ++argPos;
-      continue;
-    }
-    ARG_CASE("-shadronpreview", 2) {
-      config.shadronPreviewFilename = argv[++argPos];
-      config.shadronPreviewText = argv[++argPos];
       ++argPos;
       continue;
     }
@@ -730,13 +688,12 @@ int main(int argc, const char *const *argv) {
   }
   if (!fontInput.fontFilename)
     ABORT("No font specified.");
-  if (!(config.arteryFontFilename || config.imageFilename ||
-        config.jsonFilename || config.csvFilename ||
-        config.shadronPreviewFilename)) {
+  if (!(config.imageFilename ||
+        config.jsonFilename)) {
     puts("No output specified.");
     return 0;
   }
-  bool layoutOnly = !(config.arteryFontFilename || config.imageFilename);
+  bool layoutOnly = !config.imageFilename;
 
   // Finalize font inputs
   const FontInput *nextFontInput = &fontInput;
@@ -777,9 +734,7 @@ int main(int argc, const char *const *argv) {
     rangeMode = RANGE_PIXEL;
     rangeValue = DEFAULT_PIXEL_RANGE;
   }
-  if (config.kerning && !(config.arteryFontFilename || config.jsonFilename ||
-                          config.shadronPreviewFilename))
-    config.kerning = false;
+  if (config.kerning && !config.jsonFilename) config.kerning = false;
   if (config.threadCount <= 0)
     config.threadCount = std::max((int)std::thread::hardware_concurrency(), 1);
   if (config.generatorAttributes.scanlinePass) {
@@ -829,29 +784,12 @@ int main(int argc, const char *const *argv) {
     imageFormatName = "png";
     // If image format is not specified and -imageout is the only image output,
     // infer format from its extension
-    if (imageExtension != ImageFormat::UNSPECIFIED &&
-        !config.arteryFontFilename)
-      config.imageFormat = imageExtension;
+    if (imageExtension != ImageFormat::UNSPECIFIED) config.imageFormat = imageExtension;
   }
   if (config.imageType == ImageType::MTSDF &&
       config.imageFormat == ImageFormat::BMP)
     ABORT("Atlas type not compatible with image format. MTSDF requires a "
           "format with alpha channel.");
-  if (config.arteryFontFilename &&
-      !(config.imageFormat == ImageFormat::PNG ||
-        config.imageFormat == ImageFormat::BINARY ||
-        config.imageFormat == ImageFormat::BINARY_FLOAT)) {
-    config.arteryFontFilename = nullptr;
-    result = 1;
-    puts("Error: Unable to create an Artery Font file with the specified image "
-         "format!");
-    // Recheck whether there is anything else to do
-    if (!(config.arteryFontFilename || config.imageFilename ||
-          config.jsonFilename || config.csvFilename ||
-          config.shadronPreviewFilename))
-      return result;
-    layoutOnly = !(config.arteryFontFilename || config.imageFilename);
-  }
   if (imageExtension != ImageFormat::UNSPECIFIED) {
     // Warn if image format mismatches -imageout extension
     bool mismatch = false;
@@ -1122,15 +1060,6 @@ int main(int argc, const char *const *argv) {
       result = 1;
   }
 
-  if (config.csvFilename) {
-    if (exportCSV(fonts.data(), fonts.size(), config.width, config.height,
-                  config.yDirection, config.csvFilename))
-      puts("Glyph layout written into CSV file.");
-    else {
-      result = 1;
-      puts("Failed to write CSV output file.");
-    }
-  }
   if (config.jsonFilename) {
     if (exportJSON(fonts.data(), fonts.size(), config.emSize, config.pxRange,
                    config.width, config.height, config.imageType,
@@ -1139,27 +1068,6 @@ int main(int argc, const char *const *argv) {
     else {
       result = 1;
       puts("Failed to write JSON output file.");
-    }
-  }
-
-  if (config.shadronPreviewFilename && config.shadronPreviewText) {
-    if (anyCodepointsAvailable) {
-      std::vector<unicode_t> previewText;
-      utf8Decode(previewText, config.shadronPreviewText);
-      previewText.push_back(0);
-      if (generateShadronPreview(fonts.data(), fonts.size(), config.imageType,
-                                 config.width, config.height, config.pxRange,
-                                 previewText.data(), config.imageFilename,
-                                 floatingPointFormat,
-                                 config.shadronPreviewFilename))
-        puts("Shadron preview script generated.");
-      else {
-        result = 1;
-        puts("Failed to generate Shadron preview file.");
-      }
-    } else {
-      result = 1;
-      puts("Shadron preview not supported in -glyphset mode.");
     }
   }
 
