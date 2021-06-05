@@ -16,7 +16,6 @@
 #include "types.h"
 #include "utf8.h"
 #include "Rectangle.h"
-#include "Charset.h"
 #include "GlyphBox.h"
 #include "GlyphGeometry.h"
 #include "FontGeometry.h"

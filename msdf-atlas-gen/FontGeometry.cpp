@@ -27,7 +27,7 @@ FontGeometry::FontGeometry() : geometryScale(1), metrics(), preferredIdentifierT
 
 FontGeometry::FontGeometry(std::vector<GlyphGeometry> *glyphStorage) : geometryScale(1), metrics(), preferredIdentifierType(GlyphIdentifierType::UNICODE_CODEPOINT), glyphs(glyphStorage), rangeStart(glyphs->size()), rangeEnd(glyphs->size()) { }
 
-int FontGeometry::loadGlyphset(msdfgen::FontHandle *font, double fontScale, const Charset &glyphset, bool preprocessGeometry, bool enableKerning) {
+int FontGeometry::loadGlyphset(msdfgen::FontHandle *font, double fontScale, const std::set<unicode_t> &glyphset, bool preprocessGeometry, bool enableKerning) {
     if (!(glyphs->size() == rangeEnd && loadMetrics(font, fontScale)))
         return -1;
     glyphs->reserve(glyphs->size()+glyphset.size());
@@ -45,7 +45,7 @@ int FontGeometry::loadGlyphset(msdfgen::FontHandle *font, double fontScale, cons
     return loaded;
 }
 
-int FontGeometry::loadCharset(msdfgen::FontHandle *font, double fontScale, const Charset &charset, bool preprocessGeometry, bool enableKerning) {
+int FontGeometry::loadCharset(msdfgen::FontHandle *font, double fontScale, const std::set<unicode_t> &charset, bool preprocessGeometry, bool enableKerning) {
     if (!(glyphs->size() == rangeEnd && loadMetrics(font, fontScale)))
         return -1;
     glyphs->reserve(glyphs->size()+charset.size());

@@ -9,6 +9,8 @@
 #ifdef MSDF_ATLAS_STANDALONE
 
 #define _USE_MATH_DEFINES
+#include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -148,6 +150,21 @@ ERROR CORRECTION MODES
   help
       Displays this help.
 )";
+
+std::set<unicode_t> getAsciiCharset() {
+    std::set<unicode_t> charset;
+    for (unicode_t cp = 0x20; cp < 0x7f; ++cp) charset.insert(cp);
+    return charset;
+}
+
+std::set<unicode_t> readCharsetFromFile(const std::string& filename) {
+    // https://stackoverflow.com/a/195350 and https://stackoverflow.com/a/20053022
+    std::ifstream in(filename);
+    std::vector<char> contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    std::set<unicode_t> charset(std::make_move_iterator(contents.begin()),
+                                std::make_move_iterator(contents.end()));
+    return charset;
+}
 
 static char toupper(char c) {
     return c >= 'a' && c <= 'z' ? c-'a'+'A' : c;
@@ -800,12 +817,13 @@ int main(int argc, const char * const *argv) {
                 fontInput.fontScale = 1;
 
             // Load character set
-            Charset charset;
+            std::set<unicode_t> charset;
             if (fontInput.charsetFilename) {
-                if (!charset.load(fontInput.charsetFilename, fontInput.glyphIdentifierType != GlyphIdentifierType::UNICODE_CODEPOINT))
-                    ABORT(fontInput.glyphIdentifierType == GlyphIdentifierType::GLYPH_INDEX ? "Failed to load glyph set specification." : "Failed to load character set specification.");
+                charset = readCharsetFromFile(fontInput.charsetFilename);
+                // if (!charset.load(fontInput.charsetFilename, fontInput.glyphIdentifierType != GlyphIdentifierType::UNICODE_CODEPOINT))
+                    // ABORT(fontInput.glyphIdentifierType == GlyphIdentifierType::GLYPH_INDEX ? "Failed to load glyph set specification." : "Failed to load character set specification.");
             } else {
-                charset = Charset::ASCII;
+                charset = getAsciiCharset();
                 fontInput.glyphIdentifierType = GlyphIdentifierType::UNICODE_CODEPOINT;
             }
 
