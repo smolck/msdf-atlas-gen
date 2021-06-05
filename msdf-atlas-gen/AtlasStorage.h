@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <msdfgen.h>
 #include "Remap.h"
+#include <msdfgen.h>
 
 namespace msdf_atlas {
 
@@ -17,21 +17,24 @@ namespace {
 class AtlasStorage {
 
 public:
-    AtlasStorage();
-    AtlasStorage(int width, int height);
-    /// Creates a copy with different dimensions
-    AtlasStorage(const AtlasStorage &orig, int width, int height);
-    /// Creates a copy with different dimensions and rearranges the pixels according to the remapping array
-    AtlasStorage(const AtlasStorage &orig, int width, int height, const Remap *remapping, int count);
-    /// Stores a subsection at x, y into the atlas storage. May be implemented for only some T, N
-    template <typename T, int N>
-    void put(int x, int y, const msdfgen::BitmapConstRef<T, N> &subBitmap);
-    /// Retrieves a subsection at x, y from the atlas storage. May be implemented for only some T, N
-    template <typename T, int N>
-    void get(int x, int y, const msdfgen::BitmapRef<T, N> &subBitmap) const;
-
+  AtlasStorage();
+  AtlasStorage(int width, int height);
+  /// Creates a copy with different dimensions
+  AtlasStorage(const AtlasStorage &orig, int width, int height);
+  /// Creates a copy with different dimensions and rearranges the pixels
+  /// according to the remapping array
+  AtlasStorage(const AtlasStorage &orig, int width, int height,
+               const Remap *remapping, int count);
+  /// Stores a subsection at x, y into the atlas storage. May be implemented for
+  /// only some T, N
+  template <typename T, int N>
+  void put(int x, int y, const msdfgen::BitmapConstRef<T, N> &subBitmap);
+  /// Retrieves a subsection at x, y from the atlas storage. May be implemented
+  /// for only some T, N
+  template <typename T, int N>
+  void get(int x, int y, const msdfgen::BitmapRef<T, N> &subBitmap) const;
 };
 
-}
+} // namespace
 
-}
+} // namespace msdf_atlas

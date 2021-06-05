@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(msdf-atlas-gen)
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 if (COMPILER_SUPPORTS_CXX11)
@@ -69,3 +71,7 @@ target_link_libraries(lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext)
 
 add_executable(msdf-atlas-gen msdf-atlas-gen/main.cpp)
 target_link_libraries(msdf-atlas-gen lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext ${CMAKE_THREAD_LIBS_INIT})
+
+include(ClangFormat)
+target_clangformat_setup(msdf-atlas-gen)
+target_clangformat_setup(lib_msdf-atlas-gen)

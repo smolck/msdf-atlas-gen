@@ -15,18 +15,17 @@ namespace msdf_atlas {
 class Workload {
 
 public:
-    Workload();
-    Workload(const std::function<bool(int, int)> &workerFunction, int chunks);
-    /// Runs the process and returns true if all chunks have been processed
-    bool finish(int threadCount);
+  Workload();
+  Workload(const std::function<bool(int, int)> &workerFunction, int chunks);
+  /// Runs the process and returns true if all chunks have been processed
+  bool finish(int threadCount);
 
 private:
-    std::function<bool(int, int)> workerFunction;
-    int chunks;
+  std::function<bool(int, int)> workerFunction;
+  int chunks;
 
-    bool finishSequential();
-    bool finishParallel(int threadCount);
-
+  bool finishSequential();
+  bool finishParallel(int threadCount);
 };
 
-}
+} // namespace msdf_atlas

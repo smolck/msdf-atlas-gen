@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <vector>
 #include "Rectangle.h"
+#include <vector>
 
 namespace msdf_atlas {
 
@@ -10,19 +10,18 @@ namespace msdf_atlas {
 class RectanglePacker {
 
 public:
-    RectanglePacker();
-    RectanglePacker(int width, int height);
-    /// Packs the rectangle array, returns how many didn't fit (0 on success)
-    int pack(Rectangle *rectangles, int count);
-    int pack(OrientedRectangle *rectangles, int count);
+  RectanglePacker();
+  RectanglePacker(int width, int height);
+  /// Packs the rectangle array, returns how many didn't fit (0 on success)
+  int pack(Rectangle *rectangles, int count);
+  int pack(OrientedRectangle *rectangles, int count);
 
 private:
-    std::vector<Rectangle> spaces;
+  std::vector<Rectangle> spaces;
 
-    static int rateFit(int w, int h, int sw, int sh);
+  static int rateFit(int w, int h, int sw, int sh);
 
-    void splitSpace(int index, int w, int h);
-
+  void splitSpace(int index, int w, int h);
 };
 
-}
+} // namespace msdf_atlas

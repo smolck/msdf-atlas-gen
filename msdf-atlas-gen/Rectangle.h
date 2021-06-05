@@ -4,11 +4,11 @@
 namespace msdf_atlas {
 
 struct Rectangle {
-    int x, y, w, h;
+  int x, y, w, h;
 };
 
 struct OrientedRectangle : Rectangle {
-    bool rotated;
+  bool rotated;
 };
 
-}
+} // namespace msdf_atlas
