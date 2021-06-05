@@ -58,6 +58,7 @@ include_directories (
 )
 
 add_subdirectory (msdfgen)
+add_subdirectory(third_party/fmt)
 
 # Build the library (aliased name because it's the same target name the exe)
 folderize_sources(msdf-atlas-gen_HEADERS ${CMAKE_SOURCE_DIR})
@@ -65,7 +66,7 @@ folderize_sources(msdf-atlas-gen_SOURCES ${CMAKE_SOURCE_DIR})
 
 add_library(lib_msdf-atlas-gen ${msdfgen_SOURCES} ${msdfgen_HEADERS})
 set_target_properties(lib_msdf-atlas-gen PROPERTIES OUTPUT_NAME msdf-atlas-gen)
-target_link_libraries(lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext)
+target_link_libraries(lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext fmt::fmt)
 
 # Build the executable
 

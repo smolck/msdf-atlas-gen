@@ -3,6 +3,7 @@
 
 #include "GlyphGeometry.h"
 #include <string>
+#include <fmt/os.h>
 
 namespace msdf_atlas {
 
@@ -89,81 +90,72 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
                 double pxRange, int atlasWidth, int atlasHeight,
                 ImageType imageType, YDirection yDirection,
                 const char *filename, bool kerning) {
-  FILE *f = fopen(filename, "w");
-  if (!f)
-    return false;
-  fputs("{", f);
+  auto file = fmt::output_file(filename);
+  file.print("{{");
 
   // Atlas properties
-  fputs("\"atlas\":{", f);
+  file.print("\"atlas\": {{");
   {
-    fprintf(f, "\"type\":\"%s\",", imageTypeString(imageType));
+    file.print("\"type\":\"{}\",", imageTypeString(imageType));
     if (imageType == ImageType::SDF || imageType == ImageType::PSDF ||
         imageType == ImageType::MSDF || imageType == ImageType::MTSDF)
-      fprintf(f, "\"distanceRange\":%.17g,", pxRange);
-    fprintf(f, "\"size\":%.17g,", fontSize);
-    fprintf(f, "\"width\":%d,", atlasWidth);
-    fprintf(f, "\"height\":%d,", atlasHeight);
-    fprintf(f, "\"yOrigin\":\"%s\"",
-            yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
+      file.print("\"distanceRange\":{:.17g},", pxRange);
+    
+    file.print("\"size\":{:.17g},", fontSize);
+    file.print("\"width\":{:d},", atlasWidth);
+    file.print("\"height\":{:d},", atlasHeight);
+    file.print("\"yOrigin\":\"{}\"", yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
   }
-  fputs("},", f);
+  file.print("}},");
 
   if (fontCount > 1)
-    fputs("\"variants\":[", f);
+    file.print("\"variants\':[");
   for (int i = 0; i < fontCount; ++i) {
     const FontGeometry &font = fonts[i];
-    if (fontCount > 1)
-      fputs(i == 0 ? "{" : ",{", f);
+    if (fontCount > 1) file.print(i == 0 ? "{{" : ",{{");
 
     // Font name
     const char *name = font.getName();
     if (name)
-      fprintf(f, "\"name\":\"%s\",", escapeJsonString(name).c_str());
+      file.print("\"name\":\"{}\",", escapeJsonString(name));
 
     // Font metrics
-    fputs("\"metrics\":{", f);
+    file.print("\"metrics\":{{");
     {
       double yFactor = yDirection == YDirection::TOP_DOWN ? -1 : 1;
       const msdfgen::FontMetrics &metrics = font.getMetrics();
-      fprintf(f, "\"emSize\":%.17g,", metrics.emSize);
-      fprintf(f, "\"lineHeight\":%.17g,", metrics.lineHeight);
-      fprintf(f, "\"ascender\":%.17g,", yFactor * metrics.ascenderY);
-      fprintf(f, "\"descender\":%.17g,", yFactor * metrics.descenderY);
-      fprintf(f, "\"underlineY\":%.17g,", yFactor * metrics.underlineY);
-      fprintf(f, "\"underlineThickness\":%.17g", metrics.underlineThickness);
+      file.print("\"emSize\":{:.17g},", metrics.emSize);
+      file.print("\"lineHeight\":{:.17g},", metrics.lineHeight);
+      file.print("\"ascender\":{:.17g},", yFactor * metrics.ascenderY);
+      file.print("\"descender\":{:.17g},", yFactor * metrics.descenderY);
+      file.print("\"underlineY\":{:.17g},", yFactor * metrics.underlineY);
+      file.print("\"underlineThickness\":{:.17g}", metrics.underlineThickness);
     }
-    fputs("},", f);
+    file.print("}},");
 
     // Glyph mapping
-    fputs("\"glyphs\":[", f);
+    file.print("\"glyphs\":[");
     bool firstGlyph = true;
     for (const GlyphGeometry &glyph : font.getGlyphs()) {
-      fputs(firstGlyph ? "{" : ",{", f);
+      file.print(firstGlyph ? "{{" : ",{{");
       switch (font.getPreferredIdentifierType()) {
       case GlyphIdentifierType::GLYPH_INDEX:
-        fprintf(f, "\"index\":%d,", glyph.getIndex());
+        file.print("\"index\":{:d},", glyph.getIndex());
         break;
       case GlyphIdentifierType::UNICODE_CODEPOINT:
-        fprintf(f, "\"unicode\":%u,", glyph.getCodepoint());
+        file.print("\"unicode\":{},", glyph.getCodepoint());
         break;
       }
-      fprintf(f, "\"advance\":%.17g", glyph.getAdvance());
+      file.print("\"advance\":{:.17g}", glyph.getAdvance());
       double l, b, r, t;
       glyph.getQuadPlaneBounds(l, b, r, t);
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          fprintf(f,
-                  ",\"planeBounds\":{\"left\":%.17g,\"bottom\":%.17g,\"right\":"
-                  "%.17g,\"top\":%.17g}",
-                  l, b, r, t);
+          file.print(",\"planeBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          fprintf(f,
-                  ",\"planeBounds\":{\"left\":%.17g,\"top\":%.17g,\"right\":%."
-                  "17g,\"bottom\":%.17g}",
-                  l, -t, r, -b);
+          file.print(",\"planeBounds\":{{\"left\":{:.17g},\"top\":{:.17g},\"right\":{:.17g},\"bottom\":{:.17g}}}", l, -t, r, -b);
           break;
         }
       }
@@ -171,37 +163,31 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          fprintf(f,
-                  ",\"atlasBounds\":{\"left\":%.17g,\"bottom\":%.17g,\"right\":"
-                  "%.17g,\"top\":%.17g}",
-                  l, b, r, t);
+          file.print(",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          fprintf(f,
-                  ",\"atlasBounds\":{\"left\":%.17g,\"top\":%.17g,\"right\":%."
-                  "17g,\"bottom\":%.17g}",
-                  l, atlasHeight - t, r, atlasHeight - b);
+          file.print(",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, atlasHeight - t, r, atlasHeight - b);
           break;
         }
       }
-      fputs("}", f);
+      file.print("}}");
       firstGlyph = false;
     }
-    fputs("]", f);
+    file.print("]");
 
     // Kerning pairs
     if (kerning) {
-      fputs(",\"kerning\":[", f);
+      file.print(",\"kerning\":[");
       bool firstPair = true;
       switch (font.getPreferredIdentifierType()) {
       case GlyphIdentifierType::GLYPH_INDEX:
         for (const std::pair<std::pair<int, int>, double> &kernPair :
              font.getKerning()) {
-          fputs(firstPair ? "{" : ",{", f);
-          fprintf(f, "\"index1\":%d,", kernPair.first.first);
-          fprintf(f, "\"index2\":%d,", kernPair.first.second);
-          fprintf(f, "\"advance\":%.17g", kernPair.second);
-          fputs("}", f);
+          file.print(firstPair ? "{{" : ",{{");
+          file.print("\"index1\":{:d},", kernPair.first.first);
+          file.print("\"index2\":{:d},", kernPair.first.second);
+          file.print("\"advance\":{:.17g}", kernPair.second);
+          file.print("}}");
           firstPair = false;
         }
         break;
@@ -214,27 +200,27 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
               font.getGlyph(msdfgen::GlyphIndex(kernPair.first.second));
           if (glyph1 && glyph2 && glyph1->getCodepoint() &&
               glyph2->getCodepoint()) {
-            fputs(firstPair ? "{" : ",{", f);
-            fprintf(f, "\"unicode1\":%u,", glyph1->getCodepoint());
-            fprintf(f, "\"unicode2\":%u,", glyph2->getCodepoint());
-            fprintf(f, "\"advance\":%.17g", kernPair.second);
-            fputs("}", f);
+            file.print(firstPair ? "{{" : ",{{");
+            file.print("\"unicode1\":{},", glyph1->getCodepoint());
+            file.print("\"unicode2\":{},", glyph2->getCodepoint());
+            file.print("\"advance\":{:.17g}", kernPair.second);
+            file.print("}}");
             firstPair = false;
           }
         }
         break;
       }
-      fputs("]", f);
+      file.print("]");
     }
 
     if (fontCount > 1)
-      fputs("}", f);
+      file.print("}}");
   }
   if (fontCount > 1)
-    fputs("]", f);
+    file.print("]");
 
-  fputs("}\n", f);
-  fclose(f);
+  file.print("}}\n");
+  file.close();
   return true;
 }
 
