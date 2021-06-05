@@ -68,8 +68,4 @@ target_link_libraries(lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext)
 # Build the executable
 
 add_executable(msdf-atlas-gen msdf-atlas-gen/main.cpp)
-target_compile_definitions(msdf-atlas-gen PRIVATE MSDF_ATLAS_STANDALONE)
 target_link_libraries(msdf-atlas-gen lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext ${CMAKE_THREAD_LIBS_INIT})
-
-add_executable(stuff stuff.cpp)
-target_link_libraries(stuff lib_msdf-atlas-gen msdfgen::msdfgen msdfgen::msdfgen-ext ${CMAKE_THREAD_LIBS_INIT})

@@ -6,8 +6,6 @@
 *
 */
 
-#ifdef MSDF_ATLAS_STANDALONE
-
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <fstream>
@@ -1013,5 +1011,3 @@ int main(int argc, const char * const *argv) {
 
     return result;
 }
-
-#endif
