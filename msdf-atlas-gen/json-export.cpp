@@ -3,7 +3,10 @@
 
 #include "GlyphGeometry.h"
 #include <string>
+#include <iostream>
+#include <fstream>
 #include <fmt/os.h>
+#include <fmt/ostream.h>
 
 namespace msdf_atlas {
 
@@ -86,76 +89,75 @@ static const char *imageTypeString(ImageType type) {
   return nullptr;
 }
 
-bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
-                double pxRange, int atlasWidth, int atlasHeight,
-                ImageType imageType, YDirection yDirection,
-                const char *filename, bool kerning) {
-  auto file = fmt::output_file(filename);
-  file.print("{{");
+void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
+  double pxRange, int atlasWidth, int atlasHeight,
+  ImageType imageType, YDirection yDirection,
+  std::ostream& output, bool kerning) {
+  fmt::print(output, "{{");
 
   // Atlas properties
-  file.print("\"atlas\": {{");
+  fmt::print(output, "\"atlas\": {{");
   {
-    file.print("\"type\":\"{}\",", imageTypeString(imageType));
+    fmt::print(output, "\"type\":\"{}\",", imageTypeString(imageType));
     if (imageType == ImageType::SDF || imageType == ImageType::PSDF ||
         imageType == ImageType::MSDF || imageType == ImageType::MTSDF)
-      file.print("\"distanceRange\":{:.17g},", pxRange);
+      fmt::print(output, "\"distanceRange\":{:.17g},", pxRange);
     
-    file.print("\"size\":{:.17g},", fontSize);
-    file.print("\"width\":{:d},", atlasWidth);
-    file.print("\"height\":{:d},", atlasHeight);
-    file.print("\"yOrigin\":\"{}\"", yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
+    fmt::print(output, "\"size\":{:.17g},", fontSize);
+    fmt::print(output, "\"width\":{:d},", atlasWidth);
+    fmt::print(output, "\"height\":{:d},", atlasHeight);
+    fmt::print(output, "\"yOrigin\":\"{}\"", yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
   }
-  file.print("}},");
+  fmt::print(output, "}},");
 
   if (fontCount > 1)
-    file.print("\"variants\':[");
+    fmt::print(output, "\"variants\':[");
   for (int i = 0; i < fontCount; ++i) {
     const FontGeometry &font = fonts[i];
-    if (fontCount > 1) file.print(i == 0 ? "{{" : ",{{");
+    if (fontCount > 1) fmt::print(output, i == 0 ? "{{" : ",{{");
 
     // Font name
     const char *name = font.getName();
     if (name)
-      file.print("\"name\":\"{}\",", escapeJsonString(name));
+      fmt::print(output, "\"name\":\"{}\",", escapeJsonString(name));
 
     // Font metrics
-    file.print("\"metrics\":{{");
+    fmt::print(output, "\"metrics\":{{");
     {
       double yFactor = yDirection == YDirection::TOP_DOWN ? -1 : 1;
       const msdfgen::FontMetrics &metrics = font.getMetrics();
-      file.print("\"emSize\":{:.17g},", metrics.emSize);
-      file.print("\"lineHeight\":{:.17g},", metrics.lineHeight);
-      file.print("\"ascender\":{:.17g},", yFactor * metrics.ascenderY);
-      file.print("\"descender\":{:.17g},", yFactor * metrics.descenderY);
-      file.print("\"underlineY\":{:.17g},", yFactor * metrics.underlineY);
-      file.print("\"underlineThickness\":{:.17g}", metrics.underlineThickness);
+      fmt::print(output, "\"emSize\":{:.17g},", metrics.emSize);
+      fmt::print(output, "\"lineHeight\":{:.17g},", metrics.lineHeight);
+      fmt::print(output, "\"ascender\":{:.17g},", yFactor * metrics.ascenderY);
+      fmt::print(output, "\"descender\":{:.17g},", yFactor * metrics.descenderY);
+      fmt::print(output, "\"underlineY\":{:.17g},", yFactor * metrics.underlineY);
+      fmt::print(output, "\"underlineThickness\":{:.17g}", metrics.underlineThickness);
     }
-    file.print("}},");
+    fmt::print(output, "}},");
 
     // Glyph mapping
-    file.print("\"glyphs\":[");
+    fmt::print(output, "\"glyphs\":[");
     bool firstGlyph = true;
     for (const GlyphGeometry &glyph : font.getGlyphs()) {
-      file.print(firstGlyph ? "{{" : ",{{");
+      fmt::print(output, firstGlyph ? "{{" : ",{{");
       switch (font.getPreferredIdentifierType()) {
       case GlyphIdentifierType::GLYPH_INDEX:
-        file.print("\"index\":{:d},", glyph.getIndex());
+        fmt::print(output, "\"index\":{:d},", glyph.getIndex());
         break;
       case GlyphIdentifierType::UNICODE_CODEPOINT:
-        file.print("\"unicode\":{},", glyph.getCodepoint());
+        fmt::print(output, "\"unicode\":{},", glyph.getCodepoint());
         break;
       }
-      file.print("\"advance\":{:.17g}", glyph.getAdvance());
+      fmt::print(output, "\"advance\":{:.17g}", glyph.getAdvance());
       double l, b, r, t;
       glyph.getQuadPlaneBounds(l, b, r, t);
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          file.print(",\"planeBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
+          fmt::print(output, ",\"planeBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          file.print(",\"planeBounds\":{{\"left\":{:.17g},\"top\":{:.17g},\"right\":{:.17g},\"bottom\":{:.17g}}}", l, -t, r, -b);
+          fmt::print(output, ",\"planeBounds\":{{\"left\":{:.17g},\"top\":{:.17g},\"right\":{:.17g},\"bottom\":{:.17g}}}", l, -t, r, -b);
           break;
         }
       }
@@ -163,31 +165,31 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          file.print(",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
+          fmt::print(output, ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          file.print(",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, atlasHeight - t, r, atlasHeight - b);
+          fmt::print(output, ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, atlasHeight - t, r, atlasHeight - b);
           break;
         }
       }
-      file.print("}}");
+      fmt::print(output, "}}");
       firstGlyph = false;
     }
-    file.print("]");
+    fmt::print(output, "]");
 
     // Kerning pairs
     if (kerning) {
-      file.print(",\"kerning\":[");
+      fmt::print(output, ",\"kerning\":[");
       bool firstPair = true;
       switch (font.getPreferredIdentifierType()) {
       case GlyphIdentifierType::GLYPH_INDEX:
         for (const std::pair<std::pair<int, int>, double> &kernPair :
              font.getKerning()) {
-          file.print(firstPair ? "{{" : ",{{");
-          file.print("\"index1\":{:d},", kernPair.first.first);
-          file.print("\"index2\":{:d},", kernPair.first.second);
-          file.print("\"advance\":{:.17g}", kernPair.second);
-          file.print("}}");
+          fmt::print(output, firstPair ? "{{" : ",{{");
+          fmt::print(output, "\"index1\":{:d},", kernPair.first.first);
+          fmt::print(output, "\"index2\":{:d},", kernPair.first.second);
+          fmt::print(output, "\"advance\":{:.17g}", kernPair.second);
+          fmt::print(output, "}}");
           firstPair = false;
         }
         break;
@@ -200,27 +202,47 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
               font.getGlyph(msdfgen::GlyphIndex(kernPair.first.second));
           if (glyph1 && glyph2 && glyph1->getCodepoint() &&
               glyph2->getCodepoint()) {
-            file.print(firstPair ? "{{" : ",{{");
-            file.print("\"unicode1\":{},", glyph1->getCodepoint());
-            file.print("\"unicode2\":{},", glyph2->getCodepoint());
-            file.print("\"advance\":{:.17g}", kernPair.second);
-            file.print("}}");
+            fmt::print(output, firstPair ? "{{" : ",{{");
+            fmt::print(output, "\"unicode1\":{},", glyph1->getCodepoint());
+            fmt::print(output, "\"unicode2\":{},", glyph2->getCodepoint());
+            fmt::print(output, "\"advance\":{:.17g}", kernPair.second);
+            fmt::print(output, "}}");
             firstPair = false;
           }
         }
         break;
       }
-      file.print("]");
+      fmt::print(output, "]");
     }
 
     if (fontCount > 1)
-      file.print("}}");
+      fmt::print(output, "}}");
   }
   if (fontCount > 1)
-    file.print("]");
+    fmt::print(output, "]");
 
-  file.print("}}\n");
+  fmt::print(output, "}}\n");
+}
+
+bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
+  double pxRange, int atlasWidth, int atlasHeight,
+  ImageType imageType, YDirection yDirection,
+  const char* filename, bool kerning) {
+
+  auto file = std::ofstream(filename);
+  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight, imageType, yDirection, file, kerning);
   file.close();
+
+  return true;
+}
+
+bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
+  double pxRange, int atlasWidth, int atlasHeight,
+  ImageType imageType, YDirection yDirection,
+  std::ostringstream& output, bool kerning) {
+
+  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight, imageType, yDirection, output, kerning);
+  
   return true;
 }
 
