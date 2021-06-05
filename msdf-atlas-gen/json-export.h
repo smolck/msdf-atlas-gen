@@ -15,10 +15,11 @@ bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
                 double pxRange, int atlasWidth, int atlasHeight,
                 ImageType imageType, YDirection yDirection,
                 const char *filename, bool kerning);
-/// Writes the font and glyph metrics and atlas layout data as JSON into a std::ostringstream.
+/// Writes the font and glyph metrics and atlas layout data as JSON into a
+/// std::ostringstream.
 bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
                 double pxRange, int atlasWidth, int atlasHeight,
                 ImageType imageType, YDirection yDirection,
-                std::ostringstream& output, bool kerning);
+                std::ostringstream &output, bool kerning);
 
 } // namespace msdf_atlas

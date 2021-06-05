@@ -2,11 +2,11 @@
 #include "json-export.h"
 
 #include "GlyphGeometry.h"
-#include <string>
-#include <iostream>
-#include <fstream>
 #include <fmt/os.h>
 #include <fmt/ostream.h>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 namespace msdf_atlas {
 
@@ -90,9 +90,9 @@ static const char *imageTypeString(ImageType type) {
 }
 
 void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
-  double pxRange, int atlasWidth, int atlasHeight,
-  ImageType imageType, YDirection yDirection,
-  std::ostream& output, bool kerning) {
+                  double pxRange, int atlasWidth, int atlasHeight,
+                  ImageType imageType, YDirection yDirection,
+                  std::ostream &output, bool kerning) {
   fmt::print(output, "{{");
 
   // Atlas properties
@@ -102,11 +102,12 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
     if (imageType == ImageType::SDF || imageType == ImageType::PSDF ||
         imageType == ImageType::MSDF || imageType == ImageType::MTSDF)
       fmt::print(output, "\"distanceRange\":{:.17g},", pxRange);
-    
+
     fmt::print(output, "\"size\":{:.17g},", fontSize);
     fmt::print(output, "\"width\":{:d},", atlasWidth);
     fmt::print(output, "\"height\":{:d},", atlasHeight);
-    fmt::print(output, "\"yOrigin\":\"{}\"", yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
+    fmt::print(output, "\"yOrigin\":\"{}\"",
+               yDirection == YDirection::TOP_DOWN ? "top" : "bottom");
   }
   fmt::print(output, "}},");
 
@@ -114,7 +115,8 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
     fmt::print(output, "\"variants\':[");
   for (int i = 0; i < fontCount; ++i) {
     const FontGeometry &font = fonts[i];
-    if (fontCount > 1) fmt::print(output, i == 0 ? "{{" : ",{{");
+    if (fontCount > 1)
+      fmt::print(output, i == 0 ? "{{" : ",{{");
 
     // Font name
     const char *name = font.getName();
@@ -129,9 +131,12 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
       fmt::print(output, "\"emSize\":{:.17g},", metrics.emSize);
       fmt::print(output, "\"lineHeight\":{:.17g},", metrics.lineHeight);
       fmt::print(output, "\"ascender\":{:.17g},", yFactor * metrics.ascenderY);
-      fmt::print(output, "\"descender\":{:.17g},", yFactor * metrics.descenderY);
-      fmt::print(output, "\"underlineY\":{:.17g},", yFactor * metrics.underlineY);
-      fmt::print(output, "\"underlineThickness\":{:.17g}", metrics.underlineThickness);
+      fmt::print(output, "\"descender\":{:.17g},",
+                 yFactor * metrics.descenderY);
+      fmt::print(output, "\"underlineY\":{:.17g},",
+                 yFactor * metrics.underlineY);
+      fmt::print(output, "\"underlineThickness\":{:.17g}",
+                 metrics.underlineThickness);
     }
     fmt::print(output, "}},");
 
@@ -154,10 +159,16 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          fmt::print(output, ",\"planeBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
+          fmt::print(output,
+                     ",\"planeBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},"
+                     "\"right\":{:.17g},\"top\":{:.17g}}}",
+                     l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          fmt::print(output, ",\"planeBounds\":{{\"left\":{:.17g},\"top\":{:.17g},\"right\":{:.17g},\"bottom\":{:.17g}}}", l, -t, r, -b);
+          fmt::print(output,
+                     ",\"planeBounds\":{{\"left\":{:.17g},\"top\":{:.17g},"
+                     "\"right\":{:.17g},\"bottom\":{:.17g}}}",
+                     l, -t, r, -b);
           break;
         }
       }
@@ -165,10 +176,16 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
       if (l || b || r || t) {
         switch (yDirection) {
         case YDirection::BOTTOM_UP:
-          fmt::print(output, ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, b, r, t);
+          fmt::print(output,
+                     ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},"
+                     "\"right\":{:.17g},\"top\":{:.17g}}}",
+                     l, b, r, t);
           break;
         case YDirection::TOP_DOWN:
-          fmt::print(output, ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},\"right\":{:.17g},\"top\":{:.17g}}}", l, atlasHeight - t, r, atlasHeight - b);
+          fmt::print(output,
+                     ",\"atlasBounds\":{{\"left\":{:.17g},\"bottom\":{:.17g},"
+                     "\"right\":{:.17g},\"top\":{:.17g}}}",
+                     l, atlasHeight - t, r, atlasHeight - b);
           break;
         }
       }
@@ -225,24 +242,26 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
 }
 
 bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
-  double pxRange, int atlasWidth, int atlasHeight,
-  ImageType imageType, YDirection yDirection,
-  const char* filename, bool kerning) {
+                double pxRange, int atlasWidth, int atlasHeight,
+                ImageType imageType, YDirection yDirection,
+                const char *filename, bool kerning) {
 
   auto file = std::ofstream(filename);
-  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight, imageType, yDirection, file, kerning);
+  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight,
+               imageType, yDirection, file, kerning);
   file.close();
 
   return true;
 }
 
 bool exportJSON(const FontGeometry *fonts, int fontCount, double fontSize,
-  double pxRange, int atlasWidth, int atlasHeight,
-  ImageType imageType, YDirection yDirection,
-  std::ostringstream& output, bool kerning) {
+                double pxRange, int atlasWidth, int atlasHeight,
+                ImageType imageType, YDirection yDirection,
+                std::ostringstream &output, bool kerning) {
 
-  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight, imageType, yDirection, output, kerning);
-  
+  exportJSONTo(fonts, fontCount, fontSize, pxRange, atlasWidth, atlasHeight,
+               imageType, yDirection, output, kerning);
+
   return true;
 }
 

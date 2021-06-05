@@ -688,8 +688,7 @@ int main(int argc, const char *const *argv) {
   }
   if (!fontInput.fontFilename)
     ABORT("No font specified.");
-  if (!(config.imageFilename ||
-        config.jsonFilename)) {
+  if (!(config.imageFilename || config.jsonFilename)) {
     puts("No output specified.");
     return 0;
   }
@@ -734,7 +733,8 @@ int main(int argc, const char *const *argv) {
     rangeMode = RANGE_PIXEL;
     rangeValue = DEFAULT_PIXEL_RANGE;
   }
-  if (config.kerning && !config.jsonFilename) config.kerning = false;
+  if (config.kerning && !config.jsonFilename)
+    config.kerning = false;
   if (config.threadCount <= 0)
     config.threadCount = std::max((int)std::thread::hardware_concurrency(), 1);
   if (config.generatorAttributes.scanlinePass) {
@@ -784,7 +784,8 @@ int main(int argc, const char *const *argv) {
     imageFormatName = "png";
     // If image format is not specified and -imageout is the only image output,
     // infer format from its extension
-    if (imageExtension != ImageFormat::UNSPECIFIED) config.imageFormat = imageExtension;
+    if (imageExtension != ImageFormat::UNSPECIFIED)
+      config.imageFormat = imageExtension;
   }
   if (config.imageType == ImageType::MTSDF &&
       config.imageFormat == ImageFormat::BMP)
