@@ -112,7 +112,7 @@ void exportJSONTo(const FontGeometry *fonts, int fontCount, double fontSize,
   fmt::print(output, "}},");
 
   if (fontCount > 1)
-    fmt::print(output, "\"variants\':[");
+    fmt::print(output, "\"variants\":[");
   for (int i = 0; i < fontCount; ++i) {
     const FontGeometry &font = fonts[i];
     if (fontCount > 1)
