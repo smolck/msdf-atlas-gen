@@ -28,15 +28,14 @@ public:
   const AtlasGenerator &atlasGenerator() const;
 
 private:
-  AtlasGenerator generator;
-  RectanglePacker packer;
-  int glyphCount;
-  int side;
-  std::vector<Rectangle> rectangles;
-  std::vector<Remap> remapBuffer;
-  int totalArea;
-  GeneratorAttributes genAttribs;
-  int padding;
+    AtlasGenerator generator;
+    RectanglePacker packer;
+    int glyphCount;
+    int side;
+    std::vector<Rectangle> rectangles;
+    std::vector<Remap> remapBuffer;
+    int totalArea;
+    int padding;
 };
 
 } // namespace msdf_atlas
