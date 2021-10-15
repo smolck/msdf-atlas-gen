@@ -76,7 +76,6 @@ target_link_libraries(msdf-atlas-gen lib_msdf-atlas-gen msdfgen::msdfgen msdfgen
 include(ClangFormat)
 target_clangformat_setup(msdf-atlas-gen)
 target_clangformat_setup(lib_msdf-atlas-gen)
-=======
 
 cmake_minimum_required(VERSION 3.10)
 

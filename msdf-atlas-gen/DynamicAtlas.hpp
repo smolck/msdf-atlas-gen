@@ -40,7 +40,6 @@ void DynamicAtlas<AtlasGenerator>::add(GlyphGeometry *glyphs, int count) {
       packer = RectanglePacker(side + padding, side + padding);
       packerStart = 0;
     }
-<<<<<<< HEAD
     if (packerStart < start) {
       for (int i = 0; i < start; ++i) {
         Remap &remap = remapBuffer[i];
