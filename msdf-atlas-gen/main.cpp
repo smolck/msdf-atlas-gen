@@ -147,21 +147,22 @@ ERROR CORRECTION MODES
       Displays this help.
 )";
 
-std::set<unicode_t> getAsciiCharset() {
-  std::set<unicode_t> charset;
+std::vector<unicode_t> getAsciiCharset() {
+  std::vector<unicode_t> charset;
+  charset.reserve(0x7f - 0x20); // TODO(smolck)
+
   for (unicode_t cp = 0x20; cp < 0x7f; ++cp)
-    charset.insert(cp);
+    charset.push_back(cp);
+
   return charset;
 }
 
-std::set<unicode_t> readCharsetFromFile(const std::string &filename) {
+std::vector<char> readCharsetFromFile(const std::string &filename) {
   // https://stackoverflow.com/a/195350 and https://stackoverflow.com/a/20053022
   std::ifstream in(filename);
   std::vector<char> contents((std::istreambuf_iterator<char>(in)),
-                             std::istreambuf_iterator<char>());
-  std::set<unicode_t> charset(std::make_move_iterator(contents.begin()),
-                              std::make_move_iterator(contents.end()));
-  return charset;
+                                  std::istreambuf_iterator<char>());
+  return contents;
 }
 
 static char toupper(char c) { return c >= 'a' && c <= 'z' ? c - 'a' + 'A' : c; }
@@ -864,9 +865,10 @@ int main(int argc, const char *const *argv) {
         fontInput.fontScale = 1;
 
       // Load character set
-      std::set<unicode_t> charset;
+      std::vector<unicode_t> charset;
       if (fontInput.charsetFilename) {
-        charset = readCharsetFromFile(fontInput.charsetFilename);
+        ABORT("I broke the charset filename thing");
+        // charset = reinterpret_cast<unsigned int>(readCharsetFromFile(fontInput.charsetFilename));
         // if (!charset.load(fontInput.charsetFilename,
         // fontInput.glyphIdentifierType !=
         // GlyphIdentifierType::UNICODE_CODEPOINT))

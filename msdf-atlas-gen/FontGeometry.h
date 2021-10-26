@@ -6,7 +6,6 @@
 #include <map>
 #include <msdfgen-ext.h>
 #include <msdfgen.h>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,12 +39,12 @@ public:
   /// Loads all glyphs in a glyphset (Charset elements are glyph indices),
   /// returns the number of successfully loaded glyphs
   int loadGlyphset(msdfgen::FontHandle *font, double fontScale,
-                   const std::set<unicode_t> &glyphset,
+                   const std::vector<unicode_t> &glyphset,
                    bool preprocessGeometry = true, bool enableKerning = true);
   /// Loads all glyphs in a charset (Charset elements are Unicode codepoints),
   /// returns the number of successfully loaded glyphs
   int loadCharset(msdfgen::FontHandle *font, double fontScale,
-                  const std::set<unicode_t> &charset,
+                  const std::vector<unicode_t> &charset,
                   bool preprocessGeometry = true, bool enableKerning = true);
 
   /// Only loads font metrics and geometry scale from font

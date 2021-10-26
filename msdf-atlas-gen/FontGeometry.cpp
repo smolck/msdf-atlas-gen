@@ -34,13 +34,13 @@ FontGeometry::FontGeometry(std::vector<GlyphGeometry> *glyphStorage)
       rangeEnd(glyphs->size()) {}
 
 int FontGeometry::loadGlyphset(msdfgen::FontHandle *font, double fontScale,
-                               const std::set<unicode_t> &glyphset,
+                               const std::vector<unicode_t> &glyphset,
                                bool preprocessGeometry, bool enableKerning) {
   if (!(glyphs->size() == rangeEnd && loadMetrics(font, fontScale)))
     return -1;
   glyphs->reserve(glyphs->size() + glyphset.size());
   int loaded = 0;
-  for (unicode_t index : glyphset) {
+  for (const unicode_t &index : glyphset) {
     GlyphGeometry glyph;
     if (glyph.load(font, geometryScale, msdfgen::GlyphIndex(index),
                    preprocessGeometry)) {
@@ -55,13 +55,13 @@ int FontGeometry::loadGlyphset(msdfgen::FontHandle *font, double fontScale,
 }
 
 int FontGeometry::loadCharset(msdfgen::FontHandle *font, double fontScale,
-                              const std::set<unicode_t> &charset,
+                              const std::vector<unicode_t> &charset,
                               bool preprocessGeometry, bool enableKerning) {
   if (!(glyphs->size() == rangeEnd && loadMetrics(font, fontScale)))
     return -1;
   glyphs->reserve(glyphs->size() + charset.size());
   int loaded = 0;
-  for (unicode_t cp : charset) {
+  for (const unicode_t &cp : charset) {
     GlyphGeometry glyph;
     if (glyph.load(font, geometryScale, cp, preprocessGeometry)) {
       addGlyph((GlyphGeometry &&) glyph);
